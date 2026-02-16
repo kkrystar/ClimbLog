@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moje Tréninky</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding-bottom: 80px;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .export-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+            transition: all 0.2s;
+        }
+
+        .export-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 3px 12px rgba(76, 175, 80, 0.4);
+        }
+
+        .export-button:active {
+            transform: scale(0.95);
+        }
+
+        .workouts-container {
+            padding: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .stats-container {
+            background: white;
+            padding: 16px;
+            margin: 16px auto;
+            max-width: 600px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #4CAF50;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .search-filter-container {
+            margin-bottom: 16px;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            transition: border-color 0.2s;
+        }
+
+        .search-box:focus-within {
+            border-color: #4CAF50;
+        }
+
+        .search-box svg {
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        .search-box input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 16px;
+            font-family: inherit;
+        }
+
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .filter-chips::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filter-chip {
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .filter-chip:hover {
+            border-color: #4CAF50;
+            color: #4CAF50;
+        }
+
+        .filter-chip.active {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+
+        .workout-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .workout-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+        .workout-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+
+        .workout-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .workout-date {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .workout-feeling {
+            font-size: 20px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .add-button {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            font-size: 28px;
+            line-height: 1;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .add-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(76, 175, 80, 0.5);
+        }
+
+        .add-button:active {
+            transform: scale(1.05);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            color: #333;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #666;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+            background: white;
+        }
+
+        .form-group input[type="date"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .feeling-scale {
+            margin-top: 4px;
+        }
+
+        .slider-container {
+            position: relative;
+            padding: 8px 16px 12px 16px;
+        }
+
+        .feeling-slider {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: #e8e8e8;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            position: relative;
+        }
+
+        .feeling-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            cursor: grab;
+            box-shadow: 0 3px 8px rgba(76, 175, 80, 0.3), 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 3px solid white;
+            margin-top: -14px;
+        }
+
+        .feeling-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4), 0 2px 4px rgba(0,0,0,0.15);
+        }
+
+        .feeling-slider::-webkit-slider-thumb:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+            box-shadow: 0 2px 6px rgba(76, 175, 80, 0.4), 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .feeling-slider::-moz-range-thumb {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            cursor: grab;
+            box-shadow: 0 3px 8px rgba(76, 175, 80, 0.3), 0 1px 3px rgba(0,0,0,0.1);
+            border: 3px solid white;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .feeling-slider::-moz-range-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4), 0 2px 4px rgba(0,0,0,0.15);
+        }
+
+        .feeling-slider::-moz-range-thumb:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+            box-shadow: 0 2px 6px rgba(76, 175, 80, 0.4), 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .feeling-slider::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: #e8e8e8;
+        }
+
+        .feeling-slider::-moz-range-track {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: #e8e8e8;
+        }
+
+        .slider-value {
+            text-align: center;
+            font-size: 36px;
+            font-weight: 700;
+            color: #4CAF50;
+            margin-bottom: 4px;
+            letter-spacing: -1px;
+        }
+
+        .slider-range-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+            padding: 0 16px;
+        }
+
+        .range-label {
+            font-size: 13px;
+            color: #999;
+            font-weight: 500;
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 14px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .submit-button:hover {
+            background: #45a049;
+        }
+
+        .submit-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .detail-modal .modal-content {
+            max-width: 600px;
+        }
+
+        .detail-header {
+            padding: 24px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .detail-meta {
+            display: flex;
+            gap: 16px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .detail-body {
+            padding: 24px;
+        }
+
+        .detail-section {
+            margin-bottom: 24px;
+        }
+
+        .detail-section h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-section p {
+            font-size: 16px;
+            color: #333;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .feeling-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .delete-button {
+            width: 100%;
+            padding: 14px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 16px;
+        }
+
+        .delete-button:hover {
+            background: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📝 Moje Tréninky</h1>
+        <button class="export-button" id="exportButton">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                <polyline points="16 6 12 2 8 6"></polyline>
+                <line x1="12" y1="2" x2="12" y2="15"></line>
+            </svg>
+        </button>
+    </div>
+
+    <div class="stats-container" id="statsContainer" style="display: none;">
+        <div class="stat-card">
+            <div class="stat-icon">💪</div>
+            <div class="stat-value" id="totalWorkouts">0</div>
+            <div class="stat-label">Celkem tréninků</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📅</div>
+            <div class="stat-value" id="thisMonth">0</div>
+            <div class="stat-label">Tento měsíc</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">😊</div>
+            <div class="stat-value" id="avgFeeling">0</div>
+            <div class="stat-label">Průměrný pocit</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⏱️</div>
+            <div class="stat-value" id="totalTime">0h</div>
+            <div class="stat-label">Celkový čas</div>
+        </div>
+    </div>
+
+    <div class="workouts-container" id="workoutsContainer">
+        <div class="search-filter-container" id="searchFilterContainer" style="display: none;">
+            <div class="search-box">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <input type="text" id="searchInput" placeholder="Hledat tréninky...">
+            </div>
+            <div class="filter-chips" id="filterChips">
+                <button class="filter-chip active" data-filter="all">Vše</button>
+                <button class="filter-chip" data-filter="month">Tento měsíc</button>
+                <button class="filter-chip" data-filter="week">Tento týden</button>
+            </div>
+        </div>
+        <div id="workoutsList">
+            <div class="empty-state" id="emptyState">
+                <div class="empty-state-icon">💪</div>
+                <p>Zatím nemáš žádné tréninky</p>
+                <p style="font-size: 14px; margin-top: 8px;">Klikni na tlačítko + a přidej svůj první trénink!</p>
+            </div>
+        </div>
+    </div>
+
+    <button class="add-button" id="addButton">+</button>
+
+    <!-- Modal pro přidání tréninku -->
+    <div class="modal" id="addModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Nový trénink</h2>
+                <button class="close-button" id="closeAddModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="workoutForm">
+                    <div class="form-group">
+                        <label for="activity">Co jsi dělal?</label>
+                        <input type="text" id="activity" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="date">Kdy?</label>
+                        <input type="date" id="date" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location">Kde?</label>
+                        <input type="text" id="location" required list="locationsList">
+                        <datalist id="locationsList"></datalist>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="duration">Jak dlouho trénink trval?</label>
+                        <input type="text" id="duration" required placeholder="např. 1:30">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Podrobnosti tréninku</label>
+                        <textarea id="description" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Jak ses po tréninku cítil?</label>
+                        <div class="feeling-scale">
+                            <div class="slider-value" id="sliderValue">5.0</div>
+                            <div class="slider-container">
+                                <input type="range" id="feelingSlider" class="feeling-slider" min="1" max="10" value="5" step="0.1">
+                                <div class="slider-range-labels">
+                                    <span class="range-label">1</span>
+                                    <span class="range-label">10</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-button">Uložit trénink</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pro detail tréninku -->
+    <div class="modal detail-modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Detail tréninku</h2>
+                <button class="close-button" id="closeDetailModal">&times;</button>
+            </div>
+            <div class="detail-header">
+                <div class="detail-title" id="detailTitle"></div>
+                <div class="detail-meta">
+                    <span id="detailDate"></span>
+                    <span id="detailLocation"></span>
+                </div>
+            </div>
+            <div class="detail-body">
+                <div class="detail-section">
+                    <h3>Délka tréninku</h3>
+                    <p id="detailDuration"></p>
+                </div>
+                <div class="detail-section">
+                    <h3>Podrobnosti</h3>
+                    <p id="detailDescription"></p>
+                </div>
+                <div class="detail-section">
+                    <h3>Pocit po tréninku</h3>
+                    <div class="feeling-badge" id="detailFeeling"></div>
+                </div>
+                <button class="submit-button" id="editButton" style="margin-bottom: 12px;">Upravit trénink</button>
+                <button class="delete-button" id="deleteButton">Smazat trénink</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFeeling = 5.0;
+        let currentWorkoutId = null;
+        let isEditMode = false;
+        let currentFilter = 'all';
+
+        // Inicializace
+        document.addEventListener('DOMContentLoaded', () => {
+            loadWorkouts();
+            setupEventListeners();
+            setDefaultDate();
+            loadLocationHistory();
+        });
+
+        function setupEventListeners() {
+            // Tlačítko přidat
+            document.getElementById('addButton').addEventListener('click', openAddModal);
+            
+            // Export button
+            document.getElementById('exportButton').addEventListener('click', exportToCSV);
+            
+            // Zavření modalů
+            document.getElementById('closeAddModal').addEventListener('click', closeAddModal);
+            document.getElementById('closeDetailModal').addEventListener('click', closeDetailModal);
+            
+            // Kliknutí mimo modal
+            document.getElementById('addModal').addEventListener('click', (e) => {
+                if (e.target.id === 'addModal') closeAddModal();
+            });
+            document.getElementById('detailModal').addEventListener('click', (e) => {
+                if (e.target.id === 'detailModal') closeDetailModal();
+            });
+
+            // Slider pro pocit
+            const slider = document.getElementById('feelingSlider');
+            const sliderValue = document.getElementById('sliderValue');
+            
+            slider.addEventListener('input', (e) => {
+                selectedFeeling = parseFloat(e.target.value);
+                sliderValue.textContent = selectedFeeling.toFixed(1);
+            });
+
+            // Formulář
+            document.getElementById('workoutForm').addEventListener('submit', handleFormSubmit);
+
+            // Smazání
+            document.getElementById('deleteButton').addEventListener('click', deleteWorkout);
+
+            // Úprava tréninku
+            document.getElementById('editButton').addEventListener('click', editWorkout);
+
+            // Vyhledávání
+            document.getElementById('searchInput').addEventListener('input', filterWorkouts);
+
+            // Filtry
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.addEventListener('click', (e) => {
+                    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                    e.target.classList.add('active');
+                    filterWorkouts();
+                });
+            });
+
+            // Location input - ukládání historie
+            document.getElementById('location').addEventListener('change', saveLocationToHistory);
+        }
+
+        function setDefaultDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+        }
+
+        function openAddModal() {
+            document.getElementById('addModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.remove('active');
+            document.body.style.overflow = '';
+            document.getElementById('workoutForm').reset();
+            selectedFeeling = 5.0;
+            document.getElementById('sliderValue').textContent = '5.0';
+            document.getElementById('feelingSlider').value = 5.0;
+            setDefaultDate();
+            
+            // Reset edit mode
+            isEditMode = false;
+            document.querySelector('#addModal .modal-header h2').textContent = 'Nový trénink';
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('active');
+            document.body.style.overflow = '';
+            currentWorkoutId = null;
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            try {
+                const workout = {
+                    id: isEditMode ? currentWorkoutId : Date.now(),
+                    activity: document.getElementById('activity').value,
+                    date: document.getElementById('date').value,
+                    location: document.getElementById('location').value,
+                    duration: document.getElementById('duration').value,
+                    description: document.getElementById('description').value,
+                    feeling: selectedFeeling
+                };
+
+                if (isEditMode) {
+                    updateWorkout(workout);
+                } else {
+                    saveWorkout(workout);
+                }
+                
+                saveLocationToHistory();
+                closeAddModal();
+                loadWorkouts();
+            } catch (error) {
+                console.error('Chyba při ukládání tréninku:', error);
+                alert('Nepodařilo se uložit trénink: ' + error.message);
+            }
+        }
+
+        function updateWorkout(updatedWorkout) {
+            try {
+                const workouts = getWorkouts();
+                const index = workouts.findIndex(w => w.id === updatedWorkout.id);
+                if (index !== -1) {
+                    workouts[index] = updatedWorkout;
+                    localStorage.setItem('workouts', JSON.stringify(workouts));
+                }
+            } catch (error) {
+                console.error('Chyba při aktualizaci:', error);
+                throw error;
+            }
+        }
+
+        function saveWorkout(workout) {
+            try {
+                const workouts = getWorkouts();
+                workouts.push(workout);
+                localStorage.setItem('workouts', JSON.stringify(workouts));
+            } catch (error) {
+                console.error('Chyba při ukládání:', error);
+                alert('Nepodařilo se uložit trénink. Zkus to prosím znovu.');
+            }
+        }
+
+        function getWorkouts() {
+            try {
+                const data = localStorage.getItem('workouts');
+                return data ? JSON.parse(data) : [];
+            } catch (error) {
+                console.error('Chyba při načítání tréninků:', error);
+                return [];
+            }
+        }
+
+        function loadWorkouts() {
+            try {
+                const workouts = getWorkouts();
+                const workoutsList = document.getElementById('workoutsList');
+                const emptyState = document.getElementById('emptyState');
+
+                if (workouts.length === 0) {
+                    emptyState.style.display = 'block';
+                    document.getElementById('statsContainer').style.display = 'none';
+                    document.getElementById('searchFilterContainer').style.display = 'none';
+                    return;
+                }
+
+                emptyState.style.display = 'none';
+                document.getElementById('statsContainer').style.display = 'grid';
+                document.getElementById('searchFilterContainer').style.display = 'block';
+
+                // Aktualizovat statistiky
+                updateStats(workouts);
+
+                // Aplikovat filtry a vyhledávání
+                filterWorkouts();
+            } catch (error) {
+                console.error('Chyba při načítání tréninků:', error);
+            }
+        }
+
+        function renderWorkouts(workouts) {
+            const workoutsList = document.getElementById('workoutsList');
+            
+            // Seřadit od nejnovějšího
+            workouts.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            workoutsList.innerHTML = workouts.map(workout => {
+                const feelingValue = typeof workout.feeling === 'number' ? workout.feeling.toFixed(1) : workout.feeling;
+                return `
+                <div class="workout-card" onclick="openDetailModal(${workout.id})">
+                    <div class="workout-card-header">
+                        <div>
+                            <div class="workout-title">${escapeHtml(workout.activity)}</div>
+                            <div class="workout-date">${formatDate(workout.date)}</div>
+                        </div>
+                        <div class="workout-feeling">${feelingValue}/10</div>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function updateStats(workouts) {
+            // Celkem tréninků
+            document.getElementById('totalWorkouts').textContent = workouts.length;
+
+            // Tréninky tento měsíc
+            const now = new Date();
+            const thisMonth = workouts.filter(w => {
+                const workoutDate = new Date(w.date);
+                return workoutDate.getMonth() === now.getMonth() && 
+                       workoutDate.getFullYear() === now.getFullYear();
+            }).length;
+            document.getElementById('thisMonth').textContent = thisMonth;
+
+            // Průměrný pocit
+            if (workouts.length > 0) {
+                const avgFeeling = workouts.reduce((sum, w) => sum + (typeof w.feeling === 'number' ? w.feeling : parseFloat(w.feeling)), 0) / workouts.length;
+                document.getElementById('avgFeeling').textContent = avgFeeling.toFixed(1);
+            } else {
+                document.getElementById('avgFeeling').textContent = '0';
+            }
+
+            // Celkový čas
+            const totalTime = calculateTotalTime(workouts);
+            document.getElementById('totalTime').textContent = totalTime;
+        }
+
+        function calculateTotalTime(workouts) {
+            let totalMinutes = 0;
+
+            workouts.forEach(workout => {
+                const duration = workout.duration;
+                
+                // Pokusit se parsovat různé formáty
+                // Formát "1:30" (hodiny:minuty)
+                if (duration.includes(':')) {
+                    const parts = duration.split(':');
+                    const hours = parseInt(parts[0]) || 0;
+                    const minutes = parseInt(parts[1]) || 0;
+                    totalMinutes += hours * 60 + minutes;
+                }
+                // Formát s textem typu "1 hodina 30 minut", "45 minut"
+                else {
+                    const hoursMatch = duration.match(/(\d+)\s*(h|hod|hodin|hodiny|hodina)/i);
+                    const minutesMatch = duration.match(/(\d+)\s*(m|min|minut|minuty|minuta)/i);
+                    
+                    if (hoursMatch) {
+                        totalMinutes += parseInt(hoursMatch[1]) * 60;
+                    }
+                    if (minutesMatch) {
+                        totalMinutes += parseInt(minutesMatch[1]);
+                    }
+                    
+                    // Pokud nenašel žádný formát, zkusit jen číslo (předpokládá minuty)
+                    if (!hoursMatch && !minutesMatch) {
+                        const numberMatch = duration.match(/(\d+)/);
+                        if (numberMatch) {
+                            totalMinutes += parseInt(numberMatch[1]);
+                        }
+                    }
+                }
+            });
+
+            // Převést na hodiny a minuty
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+
+            if (hours === 0) {
+                return `${minutes}m`;
+            } else if (minutes === 0) {
+                return `${hours}h`;
+            } else {
+                return `${hours}h ${minutes}m`;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString + 'T00:00:00');
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return date.toLocaleDateString('cs-CZ', options);
+        }
+
+        function openDetailModal(id) {
+            try {
+                const workouts = getWorkouts();
+                const workout = workouts.find(w => w.id === id);
+                
+                if (!workout) return;
+
+                currentWorkoutId = id;
+
+                document.getElementById('detailTitle').textContent = workout.activity;
+                document.getElementById('detailDate').textContent = formatDate(workout.date);
+                document.getElementById('detailLocation').textContent = workout.location;
+                document.getElementById('detailDuration').textContent = workout.duration;
+                document.getElementById('detailDescription').textContent = workout.description;
+                
+                const feelingValue = typeof workout.feeling === 'number' ? workout.feeling.toFixed(1) : workout.feeling;
+                document.getElementById('detailFeeling').textContent = `${feelingValue}/10`;
+
+                document.getElementById('detailModal').classList.add('active');
+                document.body.style.overflow = 'hidden';
+            } catch (error) {
+                console.error('Chyba při otevírání detailu:', error);
+            }
+        }
+
+        function deleteWorkout() {
+            if (!confirm('Opravdu chceš smazat tento trénink?')) return;
+
+            try {
+                const workouts = getWorkouts();
+                const filtered = workouts.filter(w => w.id !== currentWorkoutId);
+                localStorage.setItem('workouts', JSON.stringify(filtered));
+                closeDetailModal();
+                loadWorkouts();
+            } catch (error) {
+                console.error('Chyba při mazání:', error);
+                alert('Nepodařilo se smazat trénink');
+            }
+        }
+
+        function saveLocationToHistory() {
+            const location = document.getElementById('location').value.trim();
+            if (!location) return;
+
+            try {
+                const locations = getLocationHistory();
+                if (!locations.includes(location)) {
+                    locations.push(location);
+                    localStorage.setItem('locations', JSON.stringify(locations));
+                    loadLocationHistory();
+                }
+            } catch (error) {
+                console.error('Chyba při ukládání lokace:', error);
+            }
+        }
+
+        function getLocationHistory() {
+            try {
+                const data = localStorage.getItem('locations');
+                return data ? JSON.parse(data) : [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function loadLocationHistory() {
+            const locations = getLocationHistory();
+            const datalist = document.getElementById('locationsList');
+            datalist.innerHTML = locations.map(loc => `<option value="${loc}">`).join('');
+        }
+
+        function exportToCSV() {
+            const workouts = getWorkouts();
+            
+            if (workouts.length === 0) {
+                alert('Nemáš žádné tréninky k exportu!');
+                return;
+            }
+
+            // Seřadit od nejnovějšího
+            workouts.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            // CSV hlavička
+            let csv = 'Datum,Aktivita,Místo,Délka,Pocit (1-10),Podrobnosti\n';
+
+            // Přidat řádky
+            workouts.forEach(workout => {
+                const date = formatDate(workout.date);
+                const activity = `"${workout.activity.replace(/"/g, '""')}"`;
+                const location = `"${workout.location.replace(/"/g, '""')}"`;
+                const duration = `"${workout.duration.replace(/"/g, '""')}"`;
+                const feeling = typeof workout.feeling === 'number' ? workout.feeling.toFixed(1) : workout.feeling;
+                const description = `"${workout.description.replace(/"/g, '""').replace(/\n/g, ' ')}"`;
+                
+                csv += `${date},${activity},${location},${duration},${feeling},${description}\n`;
+            });
+
+            // Vytvořit blob
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+
+            // Datum pro název souboru
+            const today = new Date().toISOString().split('T')[0];
+            const filename = `treninky_${today}.csv`;
+
+            // Zkusit Web Share API (pro iOS)
+            if (navigator.share && navigator.canShare) {
+                const file = new File([blob], filename, { type: 'text/csv' });
+                
+                if (navigator.canShare({ files: [file] })) {
+                    navigator.share({
+                        files: [file],
+                        title: 'Moje Tréninky',
+                        text: 'Export tréninků'
+                    }).catch(err => {
+                        // Pokud share selže, použij klasický download
+                        downloadFile(url, filename);
+                    });
+                    return;
+                }
+            }
+
+            // Fallback - klasické stažení
+            downloadFile(url, filename);
+        }
+
+        function downloadFile(url, filename) {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function updateHeatmap(workouts) {
+            const heatmapGrid = document.getElementById('heatmapGrid');
+            const today = new Date();
+            const days = [];
+            
+            // Vytvořit 84 dní (12 týdnů)
+            for (let i = 83; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                days.push(date);
+            }
+
+            // Spočítat tréninky pro každý den
+            const workoutsByDate = {};
+            workouts.forEach(workout => {
+                const date = workout.date;
+                workoutsByDate[date] = (workoutsByDate[date] || 0) + 1;
+            });
+
+            // Vytvořit heatmap
+            heatmapGrid.innerHTML = days.map(date => {
+                const dateStr = date.toISOString().split('T')[0];
+                const count = workoutsByDate[dateStr] || 0;
+                
+                let level = 0;
+                if (count === 1) level = 1;
+                else if (count === 2) level = 2;
+                else if (count === 3) level = 3;
+                else if (count >= 4) level = 4;
+
+                const dayName = date.toLocaleDateString('cs-CZ', { weekday: 'short', day: 'numeric', month: 'short' });
+                
+                return `<div class="heatmap-day" data-level="${level}" title="${dayName}${count > 0 ? ': ' + count + ' tréninků' : ''}"></div>`;
+            }).join('');
+        }
+
+        function filterWorkouts() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const activeFilter = document.querySelector('.filter-chip.active').dataset.filter;
+            const allWorkouts = getWorkouts();
+
+            let filtered = allWorkouts;
+
+            // Filtrovat podle období
+            const now = new Date();
+            if (activeFilter === 'month') {
+                filtered = filtered.filter(w => {
+                    const workoutDate = new Date(w.date);
+                    return workoutDate.getMonth() === now.getMonth() && 
+                           workoutDate.getFullYear() === now.getFullYear();
+                });
+            } else if (activeFilter === 'week') {
+                const weekAgo = new Date(now);
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                filtered = filtered.filter(w => new Date(w.date) >= weekAgo);
+            }
+
+            // Vyhledávání
+            if (searchTerm) {
+                filtered = filtered.filter(w => 
+                    w.activity.toLowerCase().includes(searchTerm) ||
+                    w.location.toLowerCase().includes(searchTerm) ||
+                    w.description.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            renderWorkouts(filtered);
+        }
+
+        function editWorkout() {
+            const workouts = getWorkouts();
+            const workout = workouts.find(w => w.id === currentWorkoutId);
+            
+            if (!workout) return;
+
+            // Načíst data do formuláře
+            document.getElementById('activity').value = workout.activity;
+            document.getElementById('date').value = workout.date;
+            document.getElementById('location').value = workout.location;
+            document.getElementById('duration').value = workout.duration;
+            document.getElementById('description').value = workout.description;
+            selectedFeeling = typeof workout.feeling === 'number' ? workout.feeling : parseFloat(workout.feeling);
+            document.getElementById('feelingSlider').value = selectedFeeling;
+            document.getElementById('sliderValue').textContent = selectedFeeling.toFixed(1);
+
+            // Změnit nadpis modalu
+            document.querySelector('#addModal .modal-header h2').textContent = 'Upravit trénink';
+            
+            isEditMode = true;
+            closeDetailModal();
+            openAddModal();
+        }
+    </script>
+</body>
+</html>
